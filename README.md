@@ -14,4 +14,4 @@
 <img src="https://github.com/tgwon/Recruitment_Text_Mining/assets/102985590/8f9e24ab-ebdb-41da-a64c-19e4f3c8153d"  width="830" height="700">
 
 ## 🏆 최종결과
-- 제 4회 응용통계학과 분석 공모전 최우수상
+- 제4회 응용통계학과 분석 공모전 최우수상
