@@ -6,7 +6,7 @@
 - KeyBERT, BERTopic을 활용한 군집해석을 통해 인사이트를 도출하였다.
 - Django Framework와 생성형 AI를 통해 분석 결과의 활용성을 높혔다. 이를 통해 취업준비생에게 실질적인 도움을 줄 것으로 기대한다.
 - 서비스 시연 영상은 <a href="https://youtu.be/1sMlAB4uOCY?si=mOd8mwVrz3VC05Z9"> <img src="https://img.shields.io/badge/-video-8AC926?style=for-the-badge" height="20px" style="margin-bottom: -5px" /> </a>이곳을 통해 확인 하실 수 있습니다!
-- [Django Code](https://github.com/tgwon/Recruitment_Text_Mining_Django_Code)
+- [Django Code](https://github.com/tgwon/Recruitment_Text_Mining_Django)
 
 ##
 <img src="https://github.com/tgwon/Recruitment_Text_Mining/assets/102985590/0d82da35-9e6e-44b3-87ef-27937bcb28b8"  width="760" height="430">
