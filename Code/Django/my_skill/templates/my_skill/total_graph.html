@@ -1,0 +1,983 @@
+﻿{% extends 'base.html' %}
+{% block title %}Semantic Analysis{% endblock %}
+
+{% block content %}
+{% load static %}
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script>
+	window.onload = function (){
+        function dataStorage() {
+            var dataSet = [
+                [
+                    // 상위 200개 단어와 빈도, 상관관계 리스트
+                    {% for word, freq, correlations in correlations %}
+                        ["{{ word }}", {{ freq }}, {{ correlations }}],
+                    {% endfor %}
+                ],
+                // 다른 데이터셋 요소들
+            ];
+            // 데이터셋 활용을 위한 코드 작성
+        }
+        dataStorage();
+    };
+var sourceNumSet = [2334,2009,4880,6956,8737,16092,24702,6469,];
+        var scrWidth = screen.availWidth;
+        var scrHeight = screen.availHeight;
+        //alert(scrWidth+"/"+scrHeight);
+        if (scrWidth < 1023) {
+            var scrWidth = 1920;
+            var scrHeight = 1080;
+        };
+        var ww = 120;
+        var hh = 170;
+        //var wrapWidth = 
+        //document.getElementById("wrap_middle").style.Width = scrWidth-700;
+        // document.getElementById("wrap_middle").style.height = scrHeight - hh;
+        //document.getElementById("main_section").style.height = scrHeight - hh;
+	    //document.getElementById("right_aside").style.height = scrHeight - hh;
+	    //전역 변수
+        // var sliderValue = document.getElementById('slide').value;
+        // var groupSliderValue = document.getElementById('groupSlide').value;
+        // var dataSliderValue = document.getElementById('dataSlide').value; //1부터 값을 가지므로 0부터 값을 가지는 배열( 예. clusterCache)에 적용시킬때는 -1 해주어야 한다.
+        // var svgText = "<?xml version=\"1.0\" encoding=\"utf-8\"?><!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.0//EN\" \"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd\"><svg version=\"1.0\" id=\"Layer_1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\" width=\"1800px\" height=\"1000px\" viewBox=\"0 0 1800 1000\"><style type=\"text/css\">           <![CDATA[          svg text {font-family:MalgunGothicRegular;} .cir {        stroke: #fff;            stroke-width: 2px;        }                #selected {        stroke: #8b0000;            stroke-width: 3px;            stroke-dasharray : 10, 5;            fill-opacity:0.1; } #unselected {stroke:  #fff;stroke-width: 0px;}.cir2 {stroke: #fff;        stroke-width: 0px;        fill-opacity:0;}.lines {stroke-opacity: .6;}  .node.inactive {opacity : 0.1;}.lines.inactive {opacity : 0.1;} ]]>        </style>";
+        // var showExtraNodes = "hide";
+        // var transitionDuration = 2000;
+        var w = scrWidth-ww, h = scrHeight-hh;
+        var colors = ["#4682B4", "#FF8C00", "#9ACD32", "#8B0000", "#2F4F4F", "#4B0082", "#006400", "#CD5C5C", "#FFD700",
+            "#A0522D", "#708090", "#008080", "#800080", "#6B8E23", "#DC143C", "#DB7093", "#BDB76B", "#191970", "#D2691E",
+            "#1E90FF", "#5F9EA0", "#BC8F8F", "#FFA07A", "#FF4500", "#DEB887", "#32CD32", "#7B68EE", "#008080", "#6C0000",
+            "#655552", "#A02E19", "#A87563", "#A0522D", "#EC6527", "#EC6400", "#765338", "#AE5000", "#F5A300", "#946700",
+            "#E1AF00", //40개
+            "#C5AD49", "#FFD300", "#D2C87B", "#8F8100", "#BEAC00", "#91A500", "#294A13", "#226610", "#228B22", "#81D0F4",
+            "#416A4C", "#005A1C", "#428976", "#007574", "#2F4F4F", "#008B8B", "#1D4344", "#00415B", "#70CBF3", "#5B0062",
+            "#387089", "#5D89A1", "#7091B8", "#4169E1", "#191970", "#2E1D86", "#2A197E", "#818084", "#745DA6", "#A70004",
+            "#8B004E", "#73224E", "#AD547F", "#ED8EB8", "#EA76AB", "#E5005C", "#6B0024", "#AE5468", "#8B0010", 
+            "#000000" // 80번째
+        ];
+	    //var colors = d3.scale.category20();
+        var gg = "line"; //노드와 노드 사이 라인은 직선으로
+        var maxR; //클릭하면 강조되는 점의 반지름이자 최대 빈도수 노드의 반지름
+        var force = d3.layout.force()
+                          .size([w, h])
+                          .gravity(.1)
+                          //.linkDistance (100)
+                          .linkDistance(function (d) { return distanceScale(d.value); })
+                           //.linkStrength(1)
+                          .linkStrength(function (d) { return d.value *2; })
+                          .friction(0.8);
+                          //.theta(0.01);
+        //var edges, nodes;
+        var nodeData = force.nodes(); // nodeData를 d3.layout.force 내부의 nodes 주소와 연결시킨다.
+        var linkData = force.links(); // nodeData를 d3.layout.force 내부의 links 주소와 연결시킨다.
+        // 여기부터 force 영역 zoom에 대한 내용
+        var xScale = d3.scale.linear()
+            .domain([0, w])
+             .range([0, w]);
+        var yScale = d3.scale.linear()
+            .domain([0, h])
+           .range([0, h]);
+        var zoomer = d3.behavior.zoom().x(xScale).y(yScale).scaleExtent([0.1,8]).on("zoom",zoom);
+        function zoom() {
+            //scaleFactor = d3.event.scale;
+            //translation = d3.event.translate;
+            //force.resume();
+            tick(); //update positions
+        };
+	    /*** Configure drag behaviour ***/
+        var drag = d3.behavior.drag()
+                .origin(function (d) { return d; }) //center of circle
+                .on("dragstart", dragstarted)
+                .on("drag", dragged)
+                .on("dragend", dragended);
+        function dragstarted(d) {
+            d3.event.sourceEvent.stopPropagation();
+            //d3.select(this).classed("dragging", true);
+            d.fixed |= 2; //d3 오리지널 소스의 force.drag에서 참고함. 드래그하는 점의 진동이 발생하지 않도록 임시로 fix해주고 풀어줌
+            //force.stop(); //stop ticks while dragging
+        }
+        function dragged(d) {
+            //if (d.fixed) return; //root is fixed
+            //get mouse coordinates relative to the visualization
+            //coordinate system:
+            var mouse = d3.mouse(svg.node());
+            d.x = xScale.invert(mouse[0]); 
+            d.y = yScale.invert(mouse[1]);
+            d.px = d.x;  //d3 오리지널 소스의 force.drag에서 참고함. 드래그하는 점의 진동이 발생하지 않도록 임시로 fix해주고 변위 (px)를 직접 입력해 줌.
+            d.py = d.y;
+            force.resume();
+        }
+        function dragended(d) {
+            //d3.select(this).classed("dragging", false);
+            d.fixed &= ~6; //d3 오리지널 소스의 force.drag에서 참고함. 드래그하는 점의 진동이 발생하지 않도록 임시로 fix해주고 풀어줌
+            //force.resume();
+        }
+	    //여기까지 zoom에 대한 내용
+	    //이하 밑의 부분에 zoom과 관계된 내용은 tick()에서 좌표의 재정의. 
+        // 그리고 force.drag 대신 drag를 재정의해 사용한 것.
+        // barChart 정의하는 부분
+        var wB = w / 4;
+        var hB = h;
+        var barPadding = 1;
+        var barChartScale = d3.scale.linear();
+        //barChart zoom
+        var yScaleBar = d3.scale.linear()
+            .domain([0, hB])
+           .range([0, hB]);
+        var barZoom = d3.behavior.zoom().y(yScaleBar).scaleExtent([1,8]).on("zoom",barZoomFunction);
+        var yBase = 0;
+        function barZoomFunction() {
+            tickBar();
+        }
+        var svg = d3.select("#main_section")
+                .append("svg")
+                .attr("width", w)
+                .attr("height", h);
+        // force 줌을 위한 더미
+        svg.append("rect")
+               .attr("class", "forceBase")
+               .attr("x", wB/2)
+			   .attr("y", 0)
+			   .attr("width", w-(wB/2))
+			   .attr("height", h)
+               .attr("fill", "white")
+                .call(zoomer);
+	    // force 줌을 위한 더미
+        svg.append("rect")
+               .attr("class", "barBase")
+               .attr("x", 0)
+			   .attr("y", 0)
+			   .attr("width", (wB / 2))
+			   .attr("height", h)
+               .attr("fill", "#f5f5f5")
+                .call(barZoom);
+        /*
+        var svg = d3.select("body")
+                .insert("svg", ".below")
+                .attr("width", w)
+                .attr("height", h);
+                */
+        var distanceScale = d3.scale.pow().exponent(0.4);
+        var lineColorScale = d3.scale.linear();
+        var radiusScale = d3.scale.pow().exponent(1);
+        var textScale = d3.scale.pow().exponent(1);
+        var chargeScale = d3.scale.linear();
+        var dataset_raw ={ nodes: [], edges: [] };
+        var allNodeData = []; //모든 점들을 중복 제거하고 담아놓는 배열
+        var dataset = dataStorage();
+        var clusterCache = new Array();; //한번 계산한 클러스터 정보를 저장하는 곳
+        //클러스터 캐쉬 초기화
+        for (var i in dataset) {
+            clusterCache[i] = new Array();
+            for (var j = 0; j < (document.getElementById('groupSlide').max)+1; j++) {
+            clusterCache[i][j] = new Array();
+                for (var k in dataset[0][0]) {
+                    clusterCache[i][j][k] = -1;                  
+                };
+            };
+        };
+        //제목 설정              
+        var title = "북촌 글단위분석";
+        var subtitle = ["2003-2008년",
+                "2009년",
+                "2010년",
+                "2011년",
+                "2012년",
+                "2013년",
+                "2014년",
+                "2015년",
+                "부제목9",
+        ];
+	    //시작~
+        document.getElementById("title").innerHTML = "<txt>" + title + "</txt>";
+        readNodeData(); //모든 dataset 그룹에서 node 정보만 추출하여 입력함      
+        updateDataSlider(1);
+	    //이하 함수들.
+	    //allNodeData에 입력
+        function readNodeData() {
+            for (var i in dataset) {
+                for (var j in dataset[i][0]) {
+                    var willAdd = true;
+                    for (var k in allNodeData) {
+                        if (allNodeData[k].name == dataset[i][0][j]) { willAdd = false; break; };
+                    }
+                    if (willAdd) allNodeData.push({ "name": dataset[i][0][j] });
+                }
+            }
+        }
+        function updateDataSlider(dataN) {
+            var tTemp = new Date();
+            var tTemp2 = tTemp.getTime();
+            dataSliderValue = dataN;
+            document.getElementById("dataSlider_value").innerHTML = dataSliderValue;
+            document.getElementById("subtitle").innerHTML = "<txt>" + subtitle[dataN-1] + "</txt>";
+            var dN = dataN - 1;
+            swapRawData(dN);
+            maxR = 50 * (100 / dataset_raw.nodes.length);
+            //스케일 설정            
+            distanceScale.domain([0, d3.max(dataset_raw.edges, function (d) { return d.value; })])
+                     .range([150, 15]);
+            lineColorScale.domain([0, d3.max(dataset_raw.edges, function (d) { return d.value; })])
+                     .range([200, 50]);
+            radiusScale.domain([d3.min(dataset_raw.nodes, function (d) { return d.radius; }), d3.max(dataset_raw.nodes, function (d) { return d.radius; })])
+                         .range([5, maxR]);
+            textScale.domain([d3.min(dataset_raw.nodes, function (d) { return d.radius; }), d3.max(dataset_raw.nodes, function (d) { return d.radius; })])
+                         .range([15, 50]);
+            chargeScale.domain([100, 200])
+                       .range([-400, -150]);
+            force.charge(chargeScale(dataset_raw.nodes.length));
+            //barChart
+            barChartScale.domain([0, d3.max(dataset_raw.nodes, function (d) { return d.radius; })])
+                     .range([0, wB]);
+            //클러스터링 후 rawdata에 입력
+            if (clusterCache[dN][groupSliderValue][0] != -1) {          //캐쉬에 정보가 있으면
+                for (var i in clusterCache[dN][groupSliderValue]) {     //캐쉬를 읽고, 
+                    dataset_raw.nodes[i].group = clusterCache[dN][groupSliderValue][i];
+                };
+            } else {                                                    //없으면
+                var groupArray = H_Clustering(dataset_raw.nodes, dataset_raw.edges, groupSliderValue, dN);
+                for (var i in groupArray) {                             //새로 계산한다.
+                    for (var j in groupArray[i]) {
+                        dataset_raw.nodes[groupArray[i][j]].group = i;
+                    }
+                }
+            }
+            nodeEnterExit();   //기존 그룹과 비교하여 새로 드나드는 점들을 체크하여 입력받음
+            //기존 linedata 삭제 후 재입력
+            linkData.splice(0, linkData.length); 
+            for (var i in dataset_raw.edges) {
+                if (dataset_raw.edges[i].value > sliderValue) linkData.push(new Dataset_edges(dataset_raw.edges[i].source, dataset_raw.edges[i].target, dataset_raw.edges[i].value));
+            }
+            if (showExtraNodes=="hide") removeOutNode();            
+            var trans = d3.transition().duration(transitionDuration);
+            trans.selectAll(".cir").style("fill", function (d, i) { return colors[d.group]; });
+            trans.selectAll(".cir").attr("r", function (d, i) { if (d.radius == 0) return 2; else return radiusScale(d.radius); });
+            trans.selectAll(".cText").style("font-size", function (d) { return textScale(d.radius)+"px" }).style("opacity", function (d) { if (d.radius==0) return 0.05; else return 1;});
+            trans.selectAll(".cir2").attr("r", function (d) { if (d.on) return maxR; else return radiusScale(d.radius); });
+            update();
+            updateBarChart();
+            console.log((new Date().getTime() - tTemp2) + "milliseconds");
+        }
+        function nodeEnterExit() {
+            /**
+            * node 정보를 완전히 지우지 않고 enter() exit 방식으로 넣고 뺌.
+            * 그렇게 해야, 묶여 있는 데이터와 문서 svg요소들이 풀리지 않고 연동됨.--> transition 가능
+            */
+            for (var i in dataset_raw.nodes) {
+                var temp = findIndexOfNode(nodeData, dataset_raw.nodes[i].name);
+                if (temp != -1) {
+                    try {
+                        nodeData[temp].radius = dataset_raw.nodes[i].radius;
+                        nodeData[temp].group = dataset_raw.nodes[i].group;
+                        nodeData[temp].exist = true;
+                    } catch (e) { }
+                } else {
+                    nodeData.push(new Dataset_nodes(dataset_raw.nodes[i].name, dataset_raw.nodes[i].radius, dataset_raw.nodes[i].group));
+                    nodeData[nodeData.length - 1].exist = true;
+                    try {
+                        var temp2 = findIndexOfNode(allNodeData, dataset_raw.nodes[i].name);
+                        nodeData[nodeData.length - 1].x = allNodeData[temp2].x; //지워지기 전에 위치를 기억시켜놓고 다시 생길때 변동을 최소화함
+                        nodeData[nodeData.length - 1].y = allNodeData[temp2].y;
+                        nodeData[nodeData.length - 1].on = allNodeData[temp2].on;
+                    } catch (e) { }
+                };
+            }   //여기까지, dataset_raw 전체를 돌면서 기존 node는 덮어 쓰고, 없는 node는 새로 추가
+            for (var i = nodeData.length - 1 ; i >= 0; i--) {
+                if (!nodeData[i].exist) {
+                    if (showExtraNodes=="showAll"){
+                    nodeData[i].radius = 0;
+                    } else {                    
+                    var temp = findIndexOfNode(allNodeData, nodeData[i].name);
+                    allNodeData[temp].x = nodeData[i].x; //지워지기 전에 위치를 기억시켜놓고 다시 생길때 변동을 최소화함
+                    allNodeData[temp].y = nodeData[i].y;
+                    allNodeData[temp].on = nodeData[i].on;
+                    nodeData.splice(i, 1);                    
+                    }
+                }
+            } // 기존 node이면서 새로운 dataset에서 요구되지 않는 node들은 위치를 기억시키고 제거.
+            for (var i in nodeData) {
+                nodeData[i].exist = false;
+            } //nodeData의 추가삭제 index를 clear
+        }
+        function swapRawData(dN) {
+            //dataset_raw 지움
+            dataset_raw.nodes.splice(0, dataset_raw.nodes.length);
+            dataset_raw.edges.splice(0, dataset_raw.edges.length);
+            //선택한 그룹의 데이터 입력           
+            for (var i in dataset[dN][0]) {
+                dataset_raw.nodes.push({ "name": dataset[dN][0][i], "radius": +dataset[dN][1][i]});
+            }
+            for (var i = 2 ; i < dataset[dN].length ; i++) {
+                for (var j = i - 1 ; j < dataset[dN][i].length ; j++) {
+                    dataset_raw.edges.push({ "source": dataset[dN][0][i - 2], "target": dataset[dN][0][j], "value": dataset[dN][i][j] });
+                }
+            }
+        }
+        function update() {
+            if (gg == "line") {
+                edges = svg.selectAll("line")
+                               .data(linkData, function (d) { return d.source.name + d.target.name + d.value; });
+                edges.enter().insert("line", "g")
+                          .attr("class", "lines")
+                          //.attr("marker-end", "url(#myMarker)")
+                          //.attr("marker-start", "url(#myMarker)")
+                          .style("stroke", function (d) { return d3.rgb(lineColorScale(d.value), lineColorScale(d.value), lineColorScale(d.value)); })
+                          .style("stroke-width", function (d) { return Math.sqrt(d.value * 10); })
+                               .append("title")
+                                .text(function (d) { return (d.value); })
+                                .style("font-size", "8pt");
+            } else {
+                edges = svg.selectAll("path")
+                            .data(linkData, function (d) { return d.source.name + d.target.name + d.value; });
+                edges.enter().insert("path", "g")
+                    .attr("class", "lines")
+                    .style("stroke", function (d) { return d3.rgb(lineColorScale(d.value), lineColorScale(d.value), lineColorScale(d.value)); })
+                    .style("stroke-width", function (d) { return Math.sqrt(d.value * 10); })
+                        .append("title")
+                        .text(function (d) { return (d.value); })
+                        .style("font-size", "8pt");
+            };
+            edges.exit().remove(); //원래 있던 원소인데 이번 세트에서 포함되지 않은 것이 바로 exit() 가 반환하는 것.
+            nodes = svg.selectAll(".node")
+                            .data(nodeData, function (d) { return d.name+"_"+d.radius+"_"+d.group })
+                            .sort(function (a, b) { return d3.ascending(a.radius,b.radius) });
+            nodeEnter = nodes.enter()
+                            .append("g")
+                            .attr("class", "node")
+                            .call(drag);        //zoom 기능으로 인하여 새로 정의된 drag를 호출한다.
+                            //.call(force.drag);
+            nodeEnter.append("circle")//.transition().duration(2000)
+                  .attr("class", "cir")
+                  .attr("r", function (d) { if (d.radius==0) return 2; else return radiusScale(d.radius); })
+                  .style("fill", function (d, i) { return colors[d.group]; });
+            nodeEnter.append("circle")
+                  .attr("class", "cir2")
+                  .attr("id", function (d) { if (d.on) return "selected"; else return "unselected";})
+                  .attr("r", function (d) { if (d.on) return maxR; else return radiusScale(d.radius); })
+                  .on("click", click);
+            nodeEnter.append("text")//.transition().duration(2000)
+                  .attr("class","cText")  
+                  .attr("dx", 8)
+                  .attr("dy", ".35em")
+                  .style("font-size", function (d) { return textScale(d.radius) + "px" })
+                  .style("opacity", function (d) { if (d.radius==0) return 0.05; else return 1;})
+                  .text(function (d) { return (d.name); });
+            nodes.exit().remove();
+            nodes.on("mouseover", forceMouseover)
+                .on("mouseout", forceMouseout)
+                .call(drag);  //마우스가 올라가면 멈춘다.
+                //.call(zoomer); zoomer 를 바탕에도 쓰고 점에도 쓰면 기준점이 두개가 생겨 줌 되다가 화면이 갑자기 튄다.
+   //.radius(function (d) { return d.y; })
+   //.angle(function (d) { return d.x / 180 * Math.PI; })
+            //.tension(.85);
+            force.on("tick", tick);
+            force.start();
+            //force.alpha(0.003); //d3의 원본 중 force.tick() 아래 부분과 함께 수정하여야 함 [alpha *= 0.99 > 0.0001]
+            function click(d) {
+                if (d.on) {
+                    d3.select(this).attr("id", "unselected")
+                                   .attr("r", radiusScale(d.radius));
+                    d.on = false;
+                } else {
+                    d3.select(this).attr("id", "selected")
+                                   .attr("r", maxR);
+                    d.on = true;
+                };
+                //d3.select(this).classed("selected", d.selected = !d.selected);
+                tickBar();
+            }
+        }
+        function forceMouseover(d) {
+            d.fixed |= 4;
+            d.px = d.x, d.py = d.y;
+            showDirectLink(d);
+        }
+        function forceMouseout(d) {
+            d.fixed &= ~4;
+            d3.selectAll(".node").classed("inactive", false);
+            d3.selectAll(".lines").classed("inactive", false);
+        }
+        function tick() {
+            if (gg == "line") {
+                edges.attr("x1", function (d) { return xScale(d.source.x); })       //zoom 기능으로 인해 tick의 스케일을 조정한다.
+                 .attr("y1", function (d) { return yScale(d.source.y); })
+                 .attr("x2", function (d) { return xScale(d.target.x); })
+                 .attr("y2", function (d) { return yScale(d.target.y); });
+            } else {
+                edges.attr("d", linkArc);  // 이 부분을 다시 사용하려면 xScale , yScale 해주어야 함.
+            };
+            nodes.attr("transform", function (d) {
+                return "translate(" + xScale(d.x) + "," + yScale(d.y) + ")";
+            });
+            function linkPath1(d) {
+                var R = 5;
+                var xx = d.source.x + ((d.target.x - d.source.x) * Math.cos(R * Math.PI / 180) - (d.target.y - d.source.y) * Math.sin(R * Math.PI / 180));
+                var yy = d.source.y + ((d.target.x - d.source.x) * Math.sin(R * Math.PI / 180) + (d.target.y - d.source.y) * Math.cos(R * Math.PI / 180));
+                var linkData2 = [{ x: d.source.x, y: d.source.y }, { x: xx, y: yy }, { x: d.target.x, y: d.target.y }];
+                var line = d3.svg.line()
+                     .interpolate("basis")
+                     //.tension(0.001)
+                    .x(function (d) { return d.x; })
+                    .y(function (d) { return d.y; });
+                return line(linkData2);
+            }
+            function linkPath2(d) {
+                var diagonal = d3.svg.diagonal();
+                //.projection(function (d) { return [d.y, d.x]; });
+                var o1 = { x: d.source.x, y: d.source.y };
+                var o2 = { x: d.target.x, y: d.target.y };
+                return diagonal({ source: o1, target: o2 });
+            }
+            function linkArc(d) {
+                var dx = xScale(d.target.x - d.source.x),
+                    dy = yScale(d.target.y - d.source.y),
+                    dr = Math.sqrt(dx * dx + dy * dy);
+                return "M" + xScale(d.source.x) + "," + yScale(d.source.y) + "A" + dr + "," + dr + " 0 0,1 " + xScale(d.target.x) + "," + yScale(d.target.y);
+            }
+        }
+        // 에고넷 설정하는 부분
+        function showDirectLink(obj) {
+            var nodeTemp = new Array();
+            nodeTemp.push(obj.name);
+            for (var i in linkData) {
+                if (obj.name == linkData[i].source.name) {
+                    var idx = findIndexOfNode(nodeData,linkData[i].target.name);
+                    nodeTemp.push(nodeData[idx].name);
+                } else if (obj.name == linkData[i].target.name) {
+                    var idx = findIndexOfNode(nodeData,linkData[i].source.name);
+                    nodeTemp.push(nodeData[idx].name);
+                }
+            };
+            d3.selectAll(".node").classed("inactive", function (d) {
+                if (nodeTemp.indexOf(d.name) == -1) return true; else return false;
+            });
+            d3.selectAll(".lines").classed("inactive", function (d) {
+                if (nodeTemp.indexOf(d.source.name) != -1 && nodeTemp.indexOf(d.target.name) != -1) return false; else return true;
+            });
+        }
+        function updateBarChart() {
+            bars = svg.selectAll(".bar")
+                            .data(nodeData, function (d) { return d.name + "_" + d.radius + "_" + d.group });
+            barEnter = bars.enter()
+                        .append("g")
+                        .attr("class", "bar")
+                        .attr("transform", function (d, i) { return "translate(0," + i * yScaleBar(hB / nodeData.length) + ")" });
+            barEnter.append("rect")
+               .attr("class", "barRect")
+               .attr("dx", 0)
+			   .attr("dy", 0)
+			   .attr("width", function (d) { return barChartScale(d.radius); })
+			   //.attr("height", function (d) { return (hB / nodeData.length) - barPadding; })
+			   .attr("fill", function (d, i) { return colors[d.group]; })
+                .on("click", clickBar);
+               //.call(barZoom);
+            var fontSize = (hB / nodeData.length) / 2;
+            if (fontSize < 13) {
+                fontSize = 13;
+            } else if (fontSize > 20) {
+                fontSize = 20;
+            };
+            barEnter.append("text")
+                .attr("class","bText")
+			   .text(function (d,i) { return d.name+" :"+d.radius; })
+			   .attr("text-anchor", "start")
+			   .attr("font-family", "맑은 고딕")
+			   .attr("font-size", function (d) { return fontSize+"px";})
+			   .attr("fill", "black");
+            bars.exit().remove();
+            bars.on("mouseover", forceMouseover)
+                .on("mouseout", forceMouseout);
+            svg.selectAll(".bar")
+                .sort(function (a, b) { return d3.descending(a.radius, b.radius); });  //새로운 데이터가 업데이트 된 후 마지막으로 sort한다. exit 다음에 해야 함.
+            animateBarChart();
+        }
+        //바차트 클릭하면 force node 강조와 연동됨
+        function clickBar(d) {
+            if (d.on) {
+                d3.select(this).attr("id", "unselected");
+                d.on = false;
+            } else {
+                d3.select(this).attr("id", "selected");
+                d.on = true;
+            };
+            //d3.select(this).classed("selected", d.selected = !d.selected);
+            tickBar();
+            svg.selectAll(".cir2")
+              .attr("id", function (d) { if (d.on) return "selected"; else return "unselected"; })
+              .attr("r", function (d) { if (d.on) return maxR; else return radiusScale(d.radius); });
+        }
+        function animateBarChart() {
+            //console.log(hB/nodeData.length);
+            svg.selectAll(".bar")
+                .transition().duration(transitionDuration)
+                .attr("transform", function (d, i) { return "translate(0," + yScaleBar(i * (hB / nodeData.length)) + ")" });
+            svg.selectAll(".barRect")
+                .attr("id", function (d) { if (d.on) return "selected"; else return "unselected"; })
+                //.style("stroke", function (d) { if (d.on) return "#ff0000"; else return "#ffffff"; })
+                .transition().duration(transitionDuration)
+                .attr("width", function (d) { return barChartScale(d.radius); })
+                .attr("height", function (d) { return yScaleBar(hB / nodeData.length) - yScaleBar(barPadding); })
+                .attr("fill", function (d, i) { return colors[d.group]; });
+            var fontSize = (hB / nodeData.length) / 2;
+            if (fontSize < 13) {
+                fontSize = 13;
+            } else if (fontSize > 20) {
+                fontSize = 20;
+            };
+            svg.selectAll(".bText")
+                //.attr("dx", 0)
+                .text(function (d, i) { return d.name + " :" + d.radius; })
+                .attr("font-size", function (d) { return fontSize + "px"; })
+                .transition().duration(transitionDuration)
+                .attr("dx", function (d) { return barChartScale(d.radius); })
+                .attr("dy", function (d) { return yScaleBar(hB / nodeData.length) - yScaleBar(barPadding) + "px"; });
+        }
+        function tickBar() {
+            svg.selectAll(".bar")
+                .attr("transform", function (d, i) { return "translate(0," + yScaleBar(i * (hB / nodeData.length)) + ")" });
+            svg.selectAll(".barRect")
+                .attr("id", function (d) { if (d.on) return "selected"; else return "unselected"; })
+                .style("stroke", function (d) { if (d.on) return "#ff0000"; else return "#ffffff"; })
+                .attr("height", function (d) { return yScaleBar(hB / nodeData.length)-yScaleBar(barPadding); });
+            svg.selectAll(".bText")
+                .attr("dy", function (d) { return yScaleBar(hB / nodeData.length) - yScaleBar(barPadding) + "px"; });
+        }
+        function updateGroupSlider(amount) {
+            groupSliderValue = amount;
+            var tTemp = new Date();
+            var tTemp2 = tTemp.getTime();
+            if (clusterCache[dataSliderValue-1][groupSliderValue][0] != -1) {         //캐쉬에 정보가 있으면
+                for (var i in clusterCache[dataSliderValue-1][groupSliderValue]) {    //캐쉬를 읽고, 
+                    dataset_raw.nodes[i].group = clusterCache[dataSliderValue-1][groupSliderValue][i];
+                };
+            } else {                                                                //없으면
+                var groupArray = H_Clustering(dataset_raw.nodes, dataset_raw.edges, groupSliderValue, dataSliderValue);
+                for (var i in groupArray) {                                         //새로 계산한다.
+                    for (var j in groupArray[i]) {
+                        dataset_raw.nodes[groupArray[i][j]].group = i;
+                    }
+                }
+            }
+            console.log((new Date().getTime()-tTemp.getTime())+"seconds");
+            for (var i in nodeData) {
+                try {
+                nodeData[i].group = dataset_raw.nodes[findIndexOfNode(dataset_raw.nodes, nodeData[i].name)].group;
+                } catch (e) {
+                    nodeData[i].group = -1;
+                }
+            }
+            d3.transition().duration(transitionDuration).selectAll(".cir").style("fill", function (d, i) { return colors[d.group]; });
+            d3.transition().duration(transitionDuration).selectAll(".barRect").attr("fill", function (d, i) { return colors[d.group]; });
+            //update();
+            document.getElementById("groupslider_value").innerHTML = amount;
+        }
+        function updateSlider(amount) {
+            if (amount > sliderValue) {
+                for (var i = linkData.length - 1 ; i >= 0; i--) {
+                    if (linkData[i].value < amount) { linkData.splice(i, 1); }
+                }
+                if (showExtraNodes=="hide") removeOutNode();
+                update();
+                updateBarChart();
+                sliderValue = amount;
+                document.getElementById("slider_value").innerHTML = amount;
+            } else if (amount < sliderValue) {
+                var linkData_temp = [];
+                for (var i in dataset_raw.edges) {
+                    if ((dataset_raw.edges[i].value >= amount) && (dataset_raw.edges[i].value < sliderValue)) {
+                        linkData_temp.push({ "source": dataset_raw.edges[i].source, "target": dataset_raw.edges[i].target, "value": dataset_raw.edges[i].value });
+                    }
+                };
+                if (linkData_temp.length > 0) {
+                    insertInNode(linkData_temp);
+                    for (var i in linkData_temp) {
+                        linkData.push(new Dataset_edges(linkData_temp[i].source, linkData_temp[i].target, linkData_temp[i].value));
+                    }
+                    update();
+                    updateBarChart();
+                    linkData_temp.splice(0, linkData_temp.length); // 슬라이더 이동할 때 새롭게 업데이트 된 부분만 임시로 담았다가 제거
+                }
+                sliderValue = amount;
+                document.getElementById("slider_value").innerHTML = amount;
+            }
+        }
+        function updateShowHide(value) {
+            showExtraNodes = value;
+            if (value == "showAll") {
+                var willAdd = true;
+                for (var i in allNodeData) {
+                    for (var k in nodeData) {
+                        if (allNodeData[i].name == nodeData[k].name) { willAdd = false; break; }
+                    }
+                    if (willAdd) {
+                        var temp2 = findIndexOfNode(dataset_raw.nodes, allNodeData[i].name);
+                        try {
+                            nodeData.push(new Dataset_nodes(allNodeData[i].name, allNodeData[i].radius, dataset_raw.nodes[temp2].group));
+                        } catch (e) {  //위 행에서 에러가 나면 현재 데이터 셋에 속하지 않은 노드들임, 따라서 투명하게 표현
+                            nodeData.push(new Dataset_nodes(allNodeData[i].name, 0, -1));
+                        }
+                        //var temp = findIndexOfNode(allNodeData, dataset_raw.nodes[i].name);
+                        nodeData[nodeData.length - 1].x = allNodeData[i].x;
+                        nodeData[nodeData.length - 1].y = allNodeData[i].y;
+                        nodeData[nodeData.length - 1].on = allNodeData[i].on;
+                    }
+                    willAdd = true;
+                }
+                update();
+                updateBarChart();
+            } else if (value == "show") {
+                var willAdd = true;
+                for (var i in dataset_raw.nodes) {
+                    for (var k in nodeData) {
+                        if (dataset_raw.nodes[i].name == nodeData[k].name) { willAdd = false; break; }
+                    }
+                    if (willAdd) {
+                        nodeData.push(new Dataset_nodes(dataset_raw.nodes[i].name, dataset_raw.nodes[i].radius, dataset_raw.nodes[i].group));
+                        var temp = findIndexOfNode(allNodeData, dataset_raw.nodes[i].name);
+                        nodeData[nodeData.length - 1].x = allNodeData[temp].x;
+                        nodeData[nodeData.length - 1].y = allNodeData[temp].y;
+                        nodeData[nodeData.length - 1].on = allNodeData[temp].on; 
+                    }
+                    willAdd = true;
+                }
+                removeOutNode();
+                update();
+                updateBarChart();
+            } else if (value == "hide") {
+                removeOutNode();
+                //점을 없앨 때는 굳이 update할 필요가 없다. 해당 점만 빼주면 그만
+                svg.selectAll(".node")
+                           .data(nodeData, function (d) { return d.name + "_" + d.radius + "_" + d.group })
+                            .exit().remove();
+                //update();
+                updateBarChart();
+            }
+        }
+        function removeOutNode() {
+            for (var i = (nodeData.length - 1) ; i >= 0; i--) {
+                if ( showExtraNodes == "hide") {
+                    var willRemove = true;
+                    for (var j in linkData) {
+                        if ((nodeData[i].name == linkData[j].source.name) || (nodeData[i].name == linkData[j].target.name)) {
+                            willRemove = false;
+                            break;
+                        }
+                    }
+                } else if (showExtraNodes = "show") {
+                    if (nodeData[i].radius == 0) var willRemove = true;
+                    else var willRemove = false;                
+                }
+                if (willRemove) {
+                    var temp = findIndexOfNode(allNodeData, nodeData[i].name);
+                    allNodeData[temp].x = nodeData[i].x; //지워지기 전에 위치를 기억시켜놓고 다시 생길때 변동을 최소화함
+                    allNodeData[temp].y = nodeData[i].y;
+                    allNodeData[temp].on = nodeData[i].on;
+                    allNodeData[temp].radius = nodeData[i].radius;       //이거체크            
+                    nodeData.splice(i, 1);
+                }
+            }
+        }
+        function insertInNode(linkData_temp) {
+            var willAdd = false;
+            for (var i in dataset_raw.nodes) {
+                Middle: for (var j in linkData_temp) {
+                    if ((dataset_raw.nodes[i].name == linkData_temp[j].source) || (dataset_raw.nodes[i].name == linkData_temp[j].target)) {
+                        //데이터셋에, 새로추가된 linkdata_temp의 양 끝 노드에 존재하는 node가 있으면, 
+                        for (var k in nodeData) {
+                            if (dataset_raw.nodes[i].name == nodeData[k].name) break Middle;
+                        }
+                        willAdd = true;
+                        break;
+                    }
+                }
+                if (willAdd) {
+                    nodeData.push(new Dataset_nodes(dataset_raw.nodes[i].name, dataset_raw.nodes[i].radius, dataset_raw.nodes[i].group));
+                    var temp = findIndexOfNode(allNodeData, dataset_raw.nodes[i].name);
+                    nodeData[nodeData.length - 1].x = allNodeData[temp].x; //지워지기 전에 위치를 기억시켜놓고 다시 생길때 변동을 최소화함
+                    nodeData[nodeData.length - 1].y = allNodeData[temp].y;
+                    nodeData[nodeData.length - 1].on = allNodeData[temp].on;
+                }
+                willAdd = false;
+            }
+        }
+        function H_Clustering(node_Array, distance_Array, Ngroup) {
+            var nArray = [];
+            var dArray = [];
+            var cArray = []; //클러스터링 될 배열
+            var MIN_VALUE = -1; // 피어슨 값 중 최소값
+            //받아들인 배열을 함수 내에서 쓰기 쉽게 전환하는 과정. 다른 객체형태의 배열을 사용할 경우에는 이 부분을 고치면 된다.
+            for (var i in node_Array) {
+                nArray.push({ "index": i, "node": node_Array[i].name });
+            }
+            //dArray에 기본 최저값 채운 후, 나머지에 값 찾아서 넣기
+            //그런데, -1이 들어가면 클러스터링시 문제가 생긴다.
+            for (var i = 0 ; i < node_Array.length ; i++) {
+                dArray[i] = new Array();
+                for (var j = 0 ; j < node_Array.length ; j++) {
+                    dArray[i][j] = MIN_VALUE;
+                }
+            }
+            for (var i in distance_Array) {
+                var tempS = distance_Array[i].source;
+                var tempT = distance_Array[i].target;
+                dArray[n_Index(tempS)][n_Index(tempT)] = distance_Array[i].value;
+                dArray[n_Index(tempT)][n_Index(tempS)] = distance_Array[i].value;
+            } //나중에 빨리 찾기 위해서 가로세로 두개 다 넣는다.
+            //클러스터 배열 초기화 : 즉, nArray 데이터를 복사
+            for (var i in nArray) {
+                cArray[i] = new Array();
+                cArray[i][0] = nArray[i].index;                
+            }
+            var temp2 = 0;
+            // Ngroup 으로 지정한 수가 될때, 혹은 서로 엮는 유사성이 양수일때까지 클러스터링 하기
+            while (cArray.length > Ngroup) {
+                //cArray 각각의 거리 중 최대값 구하기
+                var maxCprValue = MIN_VALUE;
+                var maxCprIndex1, maxCprIndex2;
+                for (var i = 0; i < cArray.length; i++) {
+                    for (var j = i + 1; j < cArray.length; j++) {
+                        var temp = cprValue(i, j);
+                        if (temp >= maxCprValue) {
+                            maxCprValue = temp;
+                            maxCprIndex1 = i;
+                            maxCprIndex2 = j;
+                        }
+                    }
+                }
+                if (maxCprValue < 0) {
+                    alert("본 데이터에서 최저 클러스터의 갯수는 " + cArray.length + "개 입니다");
+                    groupSliderValue = cArray.length;
+                    document.getElementById("groupslider_value").innerHTML = groupSliderValue;
+                    document.getElementById("groupSlide").value = groupSliderValue;
+                    document.getElementById("groupSlide").min = cArray.length;
+                    break;
+                }
+                //최대값과 from/to 위치를 찾은 후, from 위치 쪽으로 옮기고 to 위치의 배열 하나 삭제
+                for (i = 0; i < cArray[maxCprIndex2].length; i++) {
+                    cArray[maxCprIndex1].push(cArray[maxCprIndex2][i]);
+                }
+                cArray.splice(maxCprIndex2, 1);
+                //alert(cArray.length);
+            }
+            //한번 계산한 것은 두번다시 안하도록 저장
+            for (var i in cArray) {
+                for (var j in cArray[i]) {
+                    clusterCache[dataSliderValue-1][groupSliderValue][cArray[i][j]]= i;
+                }
+            }
+            return cArray;
+            //두 클러스터 간의 거리 찾기 : 두 클러스터 각 원소간의 평균으로 구한다.
+            function cprValue(fromI, toI) {
+                var count = 0;
+                var sum = 0;
+                for (var i = 0; i < cArray[fromI].length; i++) {
+                    for (var j = 0; j < cArray[toI].length; j++) {
+                        sum += dArray[cArray[fromI][i]][cArray[toI][j]];
+                        //alert(sum);
+                        count++;
+                    }
+                }
+                var newValue = sum / count;
+                return newValue;
+            }
+            //초기 배열에서 이름을 index로 대체
+            function n_Index(name) {
+                var index;
+                for (var i in nArray) {
+                    if (nArray[i].node == name) { index = i; break; };
+                }
+                return index;
+            }
+        } // function H_Clustering
+        function updateGravity(value) {
+            if (value > 1) {
+                document.getElementById("gravity").value = 1;
+                value=1;
+            } else if (value<0) {
+                document.getElementById("gravity").value = 0;
+                value=0;                
+            }
+            force.gravity(value);
+            update();
+        }
+        function updateFriction(value) {
+            if (value > 1) {
+                document.getElementById("friction").value = 1;
+                value = 1;
+            } else if (value < 0) {
+                document.getElementById("friction").value = 0;
+                value = 0;
+            }
+            force.friction(value);
+            update();
+        }
+	    //생성자
+        function Dataset_nodes(name, radius, group) {
+            this.name = name;
+            this.radius = radius;
+            this.group = group;
+        }
+        function Dataset_edges(source, target, value) {
+            this.source = findNode(source); //.source 는 force.start()에서 해당 node에 참조되는 object로 변환되기 때문에 여기서의 숫자형식의 source는 유효하지않다. 따라서 nodeFrom이라는 변수를 하나 더 추가.
+            this.target = findNode(target);
+            this.value = value
+        }
+        function findNode(name) {
+            for (var i in nodeData) {
+                if (nodeData[i].name == name) { return nodeData[i]; };
+            };
+        };
+        function findIndexOfNode(nodeDataArray, name) {
+            for (var i in nodeDataArray) {
+                if (nodeDataArray[i].name == name) { return i; }
+            };
+            return -1;
+        };
+        function printGroupArray(groupArray) {
+            var groupText = "";
+            for (i in groupArray) {
+                for (j in groupArray[i]) {
+                    groupText += dataset_raw.nodes[groupArray[i][j]].name + "/";
+                }
+                console.log(groupText);
+                groupText = ""; 
+            }
+        }
+	    //svg 출력을 위한 함수
+        function printSVG() {
+            var edges = svg.selectAll("line").filter(function (d) { return d.value < sliderValue })
+               .remove();
+            var text = document.body.innerHTML;
+            var keyword = "<line" + " class";
+            var text2 = text.slice(text.indexOf(keyword), text.lastIndexOf("</svg>") + 6);
+            var child = window.open("", "", "", "");
+            child.document.body.innerText = svgText + text2;
+        }
+        function publish() {
+            var text ="";
+            text += "var gravity=" + document.getElementById("gravity").value + ";\n";
+            text += "var friction=" + document.getElementById("friction").value + ";\n";
+            text += "var graph ={ \n \"nodes\":[ \n";
+            for (var i in nodeData) {
+                var temp = "{\"name\":\"" + nodeData[i].name +"\",\"radius\":"+ nodeData[i].radius + ",\"group\":"+nodeData[i].group+"},\n";
+                text += temp;
+            }
+            text += "],\n\"link\":[\n";
+            for (var i in linkData) {
+                var temp = "{\"source\":" + findIndexOfNode(nodeData,linkData[i].source.name) + ",\"target\":" + findIndexOfNode(nodeData,linkData[i].target.name) + ",\"value\":" + linkData[i].value + "},\n";
+                text += temp;
+            }
+            text += "]\n};";
+            var child = window.open("", "", "", "");
+            child.document.body.innerText = text;
+        }
+        //
+        document.getElementById("slide").onchange = function () { updateSlider(this.value); };
+        document.getElementById("groupSlide").onchange = function () { updateGroupSlider(this.value); };
+        document.getElementById("showA").onclick = function () { updateShowHide(this.value); }
+        document.getElementById("showB").onclick = function () { updateShowHide(this.value); }
+        document.getElementById("hideB").onclick = function () { updateShowHide(this.value); }
+        document.getElementById("dataSlide").onchange = function () { updateDataSlider(this.value); }
+        document.getElementById("printSVG").onclick = function () { printSVG(); }
+        document.getElementById("publish").onclick = function () { publish(); }
+        document.getElementById("gravity").onchange = function () { updateGravity(this.value); };
+        document.getElementById("friction").onchange = function () { updateFriction(this.value); };
+        //document.getElementById("sortBar").onclick = function () { sortBarChart(); };
+        window.onkeypress = function () {
+            if (force.alpha() != 0) {
+                force.stop();
+                //var text = document.body.innerHTML;
+            } else force.resume();
+        }
+        /* update 사항
+        키보드를 누르면 멈춤. 다시 누르면 resume
+        printSVG 버튼을 누르면 svg 소스가 출력됨
+        드래그 하면 유사성 값에 따라서 노드와 링크가 사라지고 생겨남
+        체크 버튼 만들어 범위 밖의 점들을 지울지 말지 결정
+        입력 범위에 따라 크기와 거리 자동 조절
+        빈도수가 높은 순으로 sort(그렇게 해야 큰 글자가 화면 앞으로 나옴)
+        그룹화 하여 색깔 구분(계층적 클러스터링 사용. 집단간의 평균연결법
+        여러 집단을 볼 수 있게 함. 애니메이션 처리
+        한번 계산한 클러스터는 캐쉬에 넣어서 다음에 다시 계산하지 않고 사용함
+        클릭한 점들이 강조되도록
+        show entire / show unlinked / hide unlinked 로 radio 버튼을 나눔
+        모니터에 맞추어 화면을 최대화 함(2014.05)
+        다이어그램의 zoom과 pan을 가능하게 함(2014.06.14)
+        선택되면 강조되는 반경을 최대 R값과 동일하게 수정함(2014.06.15)
+        빈도 그래프 추가(2014.06.25)
+        점을 선택하면 에고 넷 보여줌(2014.06.25)
+        */
+    </script>
+
+
+<!-- <body> -->
+<article id="top" class="wrapper style1">
+    <header id="main_header">
+        <div id="title">
+        <txt>willBeSubstituted</txt>
+        </div>
+        <div id="subtitle">
+            <txt>willBeSubstituted</txt>
+        </div>
+    </header>
+    <div id="wrap_middle">
+        <section id="main_section" class="graph">
+        </section>
+        <aside id="right_aside">
+            <div class="item">
+                    <div class="control_text">
+                        <txt>Gravity : </txt>
+                    </div>
+                    <div class="control_input">
+                        <input id="gravity" style="width :40px" type="number" min="0" max="1" step="0.1" value="0.1" /><br />
+                    </div>
+             </div>
+            <div class="item">
+                    <div class="control_text">
+                        <txt>Friction : </txt>
+                    </div>
+                    <div class="control_input">
+                        <input id="friction" style="width :40px" type="number" min="0" max="1" step="0.1" value="0.8" /><br />
+                    </div>
+             </div>
+            <div class="item" >
+                    <input id="printSVG" type="button" value="SVG" />
+             </div>
+            <div class="item" >
+                    <input id="publish" type="button" value="Publish" />
+             </div>
+         <!--   <div class="item" >
+                    <input id="sortBar" type="button" value="sort" />
+             </div>-->
+        </aside>
+   </div>
+    <footer class="below" id="wrap_bottom">        
+        <div class="item_bottom" id="bottom_1">
+            <input id="slide" type="range" min="0" max="0.99" step="0.01" value="0.2" style="width: 260px;"   />
+            <txt >유사도 </txt>
+            <txt id="slider_value">0.2</txt>
+            <txt >이상</txt>
+        </div>
+        <div class="item_bottom" id="bottom_2" >
+            <input id="showA" value="showAll" type="radio" name="onoff" />
+            <label for="showA">Show entire set</label> 
+            <input id="showB" value="show" type="radio" name="onoff" />
+            <label for="showB">Show unlinked</label>
+            <input id="hideB" value="hide" type="radio" name="onoff" checked="checked" />
+            <label for="hideB">Hide unlinked</label>
+        </div>
+        <div class="item_bottom" id="bottom_3" style ="width : 300px">
+            <input id="groupSlide" type="range" min="2" max="40" step="1" value="10" style="width: 200px;"   />
+            <txt id="groupslider_value">10</txt>
+            <txt>clusters</txt>
+        </div>
+        <div class="item_bottom" id="bottom_4" style ="width : 250px">
+            <txt>데이터 선택</txt>
+            <input id="dataSlide" type="range" min="1" max="16" step="1" value="1" style="width: 150px;"   />
+            <txt id="dataSlider_value">1</txt>
+        </div>        
+        </footer>  
+</article>
+    <!-- </body> -->
+    
+{% endblock %}
+</html>

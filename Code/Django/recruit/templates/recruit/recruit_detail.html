@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %}recruit_detail.html{% endblock %}
+
+{% block content %}
+{% load static %}
+<!-- Page Content-->
+
+<section class="bg-light py-5">
+<article id="top" class="wrapper style1">
+    <div class="container px-5">
+        <div class="row gx-5">
+
+            <div class="card" style="width: 100%;">
+                <div class="card-header">
+                    <strong style="font-size: 18px;">{{ recruit.title }}</strong>&nbsp;&nbsp;<span style="font-size: 18px; color: gray;">상세보기</span>
+                    <span style="float:right;">{{ recruit.company_names }}</span>
+                </div>
+                <div class="card-body" style="min-height: 400px; color:black;">
+                    <div>
+                        <span><i class="fas fa-user-edit"></i>&nbsp;직무 : {{ recruit.main_category }}</span>
+                        <span style="float:right;">업종 : {{ recruit.industry }}</span>
+                    </div>
+                    <hr>
+                    <!--내용-->
+                    <div>
+                        <h6><strong>[업종]</strong></h6>
+                        <p>{{ recruit.main_tasks | safe }}</p>
+                    
+                        <h6><strong>[자격요건]</strong></h6> 
+                        <p>{{ recruit.qualifications | safe }}</p>
+                    
+                        <h6><strong>[우대사항]</strong></h6>
+                        <p>{{ recruit.treatment | safe }}</p>
+                    </div>
+                </div>
+            </div>
+            <br>
+            <div class="text-right">
+                {% if notice_auth or request.user.level == '0' %}
+                <button class="btn btn-sm" id="detail_btn" onclick="location.href='/recruit/{{ recruit.id }}/edit/'">수정</button>
+                <button class="btn btn-sm" id="detail_btn" data-toggle="modal" data-target="#delete_modal">삭제</button>
+                <!-- <button class="btn btn-md btn-dark" onclick="location.href='/recruit/{{ recruit.id }}/delete/'">삭제</button> -->
+                <button class="btn btn-sm" id="detail_btn" onclick="location.href='/recruit/'">목록으로</button>
+                {% else %}
+                <button class="btn btn-sm" id="detail_btn" onclick="location.href='/recruit/'">목록으로</button>
+                {% endif %}
+            </div>
+        </div>
+
+        <div id="delete_modal" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">삭제경고</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>게시글을 삭제하시겠습니까?</p>
+                </div>
+                <div class="modal-footer">
+                    <button onclick="delete_modal()" type="button" class="btn btn-dark">삭제하기</button>
+                    <button type="button" class="btn btn-light" data-dismiss="modal">취소하기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</article>
+</section>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('img').css('width', '100%');
+    });
+
+    function delete_modal() {
+        location.replace('/notice/{{ recruit.id }}/delete/');
+    }
+</script>
+
+    </section>
+{% endblock %}

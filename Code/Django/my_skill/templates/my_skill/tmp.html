@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>네트워크 시각화</title>
+    {% load static %}
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script>
+        // 데이터셋을 GML 파일에서 읽어오는 함수
+        function readGMLData() {
+            d3.text('{% static 'text_network/ML_graph_gpt.gml' %}', function(error, gmlData) {
+                if (error) throw error;
+
+                var nodes = [];
+                var links = [];
+
+                var lines = gmlData.split("\n"); // 각 줄을 배열로 분리
+
+                var readingNodes = false; // 노드 읽기 모드인지 여부
+                var readingEdges = false; // 엣지 읽기 모드인지 여부
+
+                lines.forEach(function(line) {
+                    line = line.trim(); // 앞뒤 공백 제거
+
+                    if (line === "node [") {
+                        readingNodes = true;
+                        readingEdges = false;
+                    } else if (line === "edge [") {
+                        readingNodes = false;
+                        readingEdges = true;
+                    } else if (line === "]") {
+                        readingNodes = false;
+                        readingEdges = false;
+                    } else if (readingNodes) {
+                        var nodeData = line.split(" ");
+                        var nodeId = parseInt(nodeData[0]);
+
+                        // 노드 데이터를 파싱하여 nodes 배열에 추가
+                        var node = {
+                            id: nodeId,
+                            // 추가적인 속성 파싱 및 설정
+                        };
+                        nodes.push(node);
+                    } else if (readingEdges) {
+                        var edgeData = line.split(" ");
+                        var sourceNodeId = parseInt(edgeData[1]);
+                        var targetNodeId = parseInt(edgeData[2]);
+
+                        // 엣지 데이터를 파싱하여 links 배열에 추가
+                        var link = {
+                            source: sourceNodeId,
+                            target: targetNodeId,
+                            // 추가적인 속성 파싱 및 설정
+                        };
+                        links.push(link);
+                    }
+                });
+
+                // 데이터셋을 구성하는 nodes와 links 배열을 반환합니다.
+                return { nodes: nodes, links: links };
+            });
+        }
+
+        // 시각화를 위한 코드
+        function visualize() {
+            // 데이터셋을 읽어온 후 시각화를 구현하는 로직을 작성해주세요.
+            var dataset = readGMLData();
+
+            var svg = d3.select("#network"); // SVG 요소 선택
+
+            // 네트워크 시각화에 필요한 로직을 작성해주세요.
+            // 예시로 제공하는 코드에서는 nodes와 links를 이용하여 네트워크 시각화를 구현하고 있습니다.
+
+            // 노드 그리기
+            var nodes = svg.selectAll(".node")
+                .data(dataset.nodes)
+                .enter()
+                .append("circle")
+                .attr("class", "node")
+                .attr("cx", function(d) { return d.x; })
+                .attr("cy", function(d) { return d.y; })
+                .attr("r", 5)
+                .style("fill", "blue");
+
+            // 링크 그리기
+            var links = svg.selectAll(".link")
+                .data(dataset.links)
+                .enter()
+                .append("line")
+                .attr("class", "link")
+                .attr("x1", function(d) { return d.source.x; })
+                .attr("y1", function(d) { return d.source.y; })
+                .attr("x2", function(d) { return d.target.x; })
+                .attr("y2", function(d) { return d.target.y; })
+                .style("stroke", "gray")
+                .style("stroke-width", 1);
+
+            // 추가적인 시각화 로직을 작성해주세요.
+            // 예를 들어, 노드에 마우스 오버 시 툴팁을 표시하는 등의 기능을 추가할 수 있습니다.
+
+        
+        }
+
+        // 페이지 로드 시 데이터셋을 읽고 시각화를 실행
+        window.onload = function() {
+            visualize();
+        };
+    </script>
+</head>
+<body>
+    <svg id="network" width="800" height="600"></svg>
+</body>
+</html>

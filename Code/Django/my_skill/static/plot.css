@@ -1,0 +1,153 @@
+<style>
+        #main_header {
+            min-width : 800px;
+            margin : 0 auto;
+            height : 50px;
+            position : relative;
+            background-color : rgba(0,0,0,0.04);           
+            text-align : left;
+            border-bottom : 2px solid black;
+        }
+        #main_header > #title > txt {
+            width : 500px;
+            float : left;
+            color : #353535;
+            font-family : YDIYGO320, '08SeoulNamsan B',돋움체;
+            font-size : 30px;
+            line-height : 50px;
+        }
+        #main_header > #subtitle > txt {
+            float : left;
+            color : #353535;
+            font-family : YDIYGO320, '08SeoulNamsan B',돋움체;
+            font-size : 20px;
+            line-height : 30px;
+        }
+        #wrap_middle {
+           background-color :  rgba(0,0,0,0.04);
+           overflow : hidden;
+        }
+            #wrap_middle > #right_aside {
+                float: left;
+                width: 80px;
+            }
+            #wrap_middle > #main_section { 
+                width : auto;  
+                border : 1px solid #e0e0e0;
+                padding : 0;
+                margin: 0 auto;
+                float: left;
+                background-color: white;
+            }
+        .item {
+            overflow : hidden;
+            padding : 10px;
+            border-bottom : 1px solid white;
+        }
+        .control_text {
+            width : 70px;
+            float:left;            
+        }
+            .control_text > txt {
+                color: black;
+                font-family: YDIYGO310, '08SeoulNamsan B',Arial;            
+                font-size: 15px;  
+                line-height : 30px;
+            }
+        .control_input {
+             float: left;
+             height:30px;             
+        }
+        #wrap_bottom {
+            background-color :  rgba(0,0,0,0.04);
+            height : 30px;
+            margin : 0 auto;   
+            border-top : 2px solid black;  
+            padding : 0px;
+        }
+        .item_bottom {
+            width : 400px;                    
+            float : left;
+            border-right : 1px solid white;
+            align-content : center;
+        }
+            .item_bottom > txt,label {
+                padding : 0px;
+                margin : 0px 3px 0px 3px;
+                font-family: YDIYGO310, '08SeoulNamsan B',Arial; 
+                font-size : 15px;
+                line-height: 30px;                
+                float : left;                
+            }
+            .item_bottom > input {
+                float : left;
+                padding : 0px;
+                margin: 0px;
+                height: 30px;
+            }
+        #bottom_2 > input {
+            display : none;
+        }
+            #bottom_2 > input:checked + label{
+                background-color : #808080;
+                color : white;
+            }
+            #bottom_2 > label:hover {
+                background-color : #e0e0e0;
+                color : black;
+            }
+        #bottom_2 > label {
+            width : 120px;
+            text-align : center;
+        }
+    </style>
+    <style>
+        svg text {
+            font-family:YDIYGO320, '08SeoulNamsan B', 돋움체,Arial;         
+        }
+        .cir {
+            stroke: #fff;
+            stroke-width: 2px;
+        }
+        .node > #selected {
+            stroke: #8b0000;
+            stroke-width: 3px;
+            stroke-dasharray : 10px, 5px;
+            fill-opacity:0.1;
+        }
+        .node > #unselected {
+            stroke:  #fff;
+            stroke-width: 0px;            
+        }
+        .bar > #selected {
+            stroke: #8b0000;
+            stroke-width: 2px;
+            stroke-dasharray : 10px, 5px;
+            fill-opacity:0.4;
+        }
+        .bar > #unselected {
+        }
+        .cir2 {
+            stroke: #fff;
+            stroke-width: 0px;
+            fill-opacity:0;
+        }
+        .lines {
+            fill : none;
+            stroke-opacity: .6;
+            transition: opacity 250ms;
+            -webkit-transition: opacity 250ms;
+            -moz-transition: opacity 250ms;
+        }
+        .node {
+            transition: opacity 250ms;
+            -webkit-transition: opacity 250ms;
+            -moz-transition: opacity 250ms;
+        }
+        .node.inactive {
+            opacity : 0.1;
+        }
+        .lines.inactive {
+            opacity : 0.1;            
+        }
+    </style>
