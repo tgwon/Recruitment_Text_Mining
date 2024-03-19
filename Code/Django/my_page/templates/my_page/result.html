@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% block title %}결과{% endblock %}
+
+{% block content %}
+{% load static %}
+<style>
+    .btn-lg {
+        width: 100%;
+    }
+</style>
+
+<!-- <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}"> -->
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
+<script>
+    function plotOverallRatios() {
+        var overallRatios = JSON.parse('{{ overall_ratios|escapejs }}');
+
+        var jobLabels = Object.keys(overallRatios);
+        var jobRatios = Object.values(overallRatios);
+
+        var data = [{
+            x: jobLabels,
+            y: jobRatios,
+            type: 'bar'
+        }];
+
+        var layout = {
+            title: '문장간 직무 유사도',
+            xaxis: {
+                title: '직무',
+            },
+            yaxis: {
+                title: '비율',
+            }
+        };
+
+        Plotly.newPlot('overall-ratio-chart', data, layout);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        plotOverallRatios();
+    });
+
+    function getPredictedClusters() {
+        var predictedClusters = [];
+
+        // result 배열의 모든 아이템에서 predicted_cluster 값을 가져와서 predictedClusters 배열에 추가
+        {% for item in result %}
+            predictedClusters.push('{{ item.predicted_cluster }}');
+        {% endfor %}
+
+        return predictedClusters;
+    }
+
+    function handleButtonClick() {
+    var predictedClusters = getPredictedClusters();
+
+    // URL 파라미터 생성
+    var urlParams = new URLSearchParams();
+    for (var i = 0; i < predictedClusters.length; i++) {
+        urlParams.append('predictedClusters', predictedClusters[i]);
+    }
+
+    // URL에 파라미터 추가하여 다음 페이지로 이동
+    window.location.href = "{% url 'my_page:most_similar_job' %}?" + urlParams.toString();
+    }
+</script>
+
+
+</script>
+<!-- </head> -->
+
+
+<!-- <body> -->
+
+<section class="bg-light py-5">
+    <div class="container px-5 my-5 px-5">
+        <div class="text-center mb-5">
+            <h2 class="fw-bolder">결    과</h2>
+        </div>
+        
+
+        <h2>Cluster Data</h2>
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between;">
+            {% for item in cluster_info %}
+            <div style="flex: 1 1 auto; margin: 10px;">
+                <p>Cluster {{ item.cluster }}:</p>
+                <p>설명 : {{ item.description }}:</p>
+                <img src="/static/img/cloud_{{ item.cluster }}.png" alt="워드클라우드 이미지" width="300" height="200">
+                <p>관련 문장 :</p>
+                <ul>
+                    {% for sentence in item.sentences %}
+                        <li>{{ sentence }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="container px-5 my-5 px-5">
+            {% if output %}
+            <h3 class="fw-bolder">맞춤 기술스택 제안:</h2>
+                {% for item in output %}
+                    <li>{{ item }}</li>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+            {% if cluster_data %}
+                <div id="cluster-ratio-chart"></div>
+                <p></p>
+                <div id="overall-ratio-chart"></div>
+                <script>plotOverallRatios();</script>
+            {% endif %}
+        
+
+        <div class="button-container">
+            <a href="{% url 'my_page:most_similar_job' %}"></a>
+            <!-- <a href="{% url 'recruit:index' %}"> -->
+                <!-- 버튼 클릭 이벤트 핸들러 등록 -->
+                <button class="btn btn-primary btn-lg" id="submitButton" type="submit" onclick="handleButtonClick()">맞춤 채용공고 보러가기</button>
+            </a>
+        </div>
+
+    </div>
+</section>
+<!-- </body> -->
+
+{% endblock %}

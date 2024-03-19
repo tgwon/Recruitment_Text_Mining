@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% block title %}recruit_list.html{% endblock %}
+
+{% block content %}
+{% load static %}
+
+<!-- Page Content-->
+<section class="bg-light py-5">
+    <div class="container px-5" style="padding: 15px;">
+        <div class="row gx-5">
+            <h2 class="fw-bolder">맞춤 채용공고</h2>
+
+            
+
+
+            <table class="table">
+                <thead>
+                    <tr class="text-center thead-dark">
+                        <th style="width:50%">공고명</th>
+                        <th>회사명</th>
+                        <th>직무</th>
+                        <th>유사직무</th>
+                        
+                    </tr>
+                </thead>
+                <tbody>
+                {% if similar_jobs %}
+                    {% for recruit in similar_jobs %}
+                        <tr class="text-center" style="cursor:pointer;" onclick="location.href='/recruit/{{ recruit.pk }}/'">
+                            <td>{{ recruit.title }}</td>
+                            <td>{{ recruit.company_names }}</td>
+                            <td>{{ recruit.main_category }}</td>
+                            <td>{{ recruit.industry }}</td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="3">맞춤 채용공고가 없습니다.</td>
+                    </tr>
+                {% endif %}
+                </tbody>
+            </table>
+            
+<!--Pagination-->
+{% if is_paginated %}
+<nav aria-label="Page navigation example">
+    <ul class="pagination justify-content-center">
+    {% if page_obj.has_previous %}
+        <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+        </li>
+    {% else %}
+        <li class="page-item disabled">
+        <a class="page-link" href="#" tabindex="-1" aria-disabled="True">Previous</a>
+        </li>
+    {% endif %}
+
+    {% if page_obj.number|add:'-4' > 1 %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.number|add:'-5' }}">&hellip;</a></li>
+    {% endif %}
+
+    {% for i in page_obj.paginator.page_range %}
+        {% if page_obj.number == i %}
+            <li class="page-item active" aria-current="page">
+            <span class="page-link">
+            {{ i }}
+            <span class="sr-only">(current)</span>
+            </span>
+        </li>
+        {% elif i > page_obj.number|add:'-5' and i < page_obj.number|add:'5' %}
+                <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+        {% endif %}
+    {% endfor %}
+
+    {% if page_obj.paginator.num_pages > page_obj.number|add:'4' %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.number|add:'5' }}">&hellip;</a></li>
+    {% endif %}
+
+    {% if page_obj.has_next %}
+        <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+        </li>
+    {% else %}
+        <li class="page-item disabled">
+        <a class="page-link" href="#" tabindex="-1" aria-disabled="True">Next</a>
+        </li>
+    {% endif %}
+    </ul>
+</nav>
+{% endif %}
+<!--end of Pagination-->
+
+
+
+        </div>
+    </div>
+</section>
+{% endblock %}

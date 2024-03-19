@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% block title %}문장 입력{% endblock %}
+
+{% block content %}
+{% load static %}
+<style>
+    h1 {
+        color: #343a40;
+        text-align: center;
+    }
+    .input-group {
+        display: flex;
+        align-items: stretch;
+        margin-bottom: 10px;
+    }
+    .button-container {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+    }
+    .btn-danger {
+        display: flex;
+        align-items: center;
+        padding: .375rem .75rem;
+    }
+    .btn-lg {
+        width: 100%;
+    }
+    .btn-secondary {
+        margin-right: 10px;
+    }
+</style>
+
+<script>
+    function addSentenceField() {
+        var index = document.querySelectorAll('[name^=sentence]').length;
+
+        var div = document.createElement("div");
+        div.className = "input-group";
+        div.id = "div" + index;
+
+        var inputDiv = document.createElement("div");
+        inputDiv.className = "form-floating flex-grow-1";
+
+        var input = document.createElement("input");
+        input.className = "form-control";
+        input.type = "text";
+        input.name = "sentence" + index;
+        input.id = "sentence" + index;
+        input.placeholder = "Enter your name...";
+        input.required = true;
+
+        var label = document.createElement("label");
+        label.htmlFor = "sentence" + index;
+        label.textContent = "문장을 입력해주세요";
+        
+        var button = document.createElement("button");
+        button.type = "button";
+        button.className = "btn btn-danger mg-3";
+        button.textContent = "삭제";
+        button.onclick = function() {
+            var div = document.getElementById("div" + index);
+            div.remove();
+        }
+        
+        inputDiv.appendChild(input);
+        inputDiv.appendChild(label);
+        div.appendChild(inputDiv);
+        div.appendChild(button);
+
+        var container = document.getElementById("sentence-container");
+        container.appendChild(div);
+    }
+</script>
+
+<section class="bg-light py-5">
+    <div class="container px-5 my-5 px-5">
+        <div class="text-center mb-5">
+            <h2 class="fw-bolder">문장입력</h2>
+            <p class="lead mb-0">여러개의 문장을 입력하면 각각의 클러스터를 예측합니다</p>
+        </div>
+
+        <div class="row gx-5 justify-content-center">
+            <form method="post" action="{% url 'my_page:index' %}">
+                {% csrf_token %}
+                <div id="sentence-container">
+                    <div class="input-group" id="div0">
+                        <div class="form-floating flex-grow-1">
+                            <input class="form-control" id="sentence0" name="sentence0" type="text" placeholder="Enter your name..." data-sb-validations="required" />
+                            <label for="name">문장을 입력해주세요</label>
+                        </div>
+                        <button type="button" class="btn btn-danger mg-3" onclick="document.getElementById('div0').remove();">삭제</button>
+                    </div>
+                </div>
+                <div class="button-container">
+                    <button type="button" onclick="addSentenceField()" class="btn btn-secondary">추가</button>
+                    <button class="btn btn-primary btn-lg" id="submitButton" type="submit">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}
+</html>

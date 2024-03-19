@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cluster Results</title>
+</head>
+<body>
+    <h1>Cluster Results</h1>
+    <ul>
+        {% for cluster, count in cluster_counts.items %}
+        <li>Cluster {{ cluster }}: {{ count }}</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}결과{% endblock %}
+
+{% block content %}
+{% load static %}
+<!-- <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}"> -->
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
+<script>
+    function plotOverallRatios() {
+        var overallRatios = JSON.parse('{{ overall_ratios|escapejs }}');
+
+        var jobLabels = Object.keys(overallRatios);
+        var jobRatios = Object.values(overallRatios);
+
+        var data = [{
+            labels: jobLabels,
+            values: jobRatios,
+            type: 'pie'
+        }];
+
+        var layout = {
+            title: '문장간 직무 유사도'
+        };
+
+        Plotly.newPlot('overall-ratio-chart', data, layout);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        plotOverallRatios();
+    });
+</script>
+<!-- </head> -->
+
+
+<!-- <body> -->
+<article id="top" class="wrapper style1">
+    <div class="container">
+        <h1>결과</h1>
+        {% if result %}
+            <ul>
+                {% for item in result %}
+                    <li>
+                        <p>문장: {{ item.sentence }}</p>
+                        <p>예측된 클러스터: {{ item.predicted_cluster }}</p>
+                        <img src="/static/img/cloud_{{ item.predicted_cluster }}.png" alt="워드클라우드 이미지">
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>결과가 없습니다.</p>
+        {% endif %}
+
+        {% if cluster_data %}
+            <div id="cluster-ratio-chart"></div>
+            <p></p>
+            <div id="overall-ratio-chart"></div>
+            <script>plotOverallRatios();</script>
+        {% endif %}
+    </div>
+</article>
+<!-- </body> -->
+
+{% endblock %}
+</html>
