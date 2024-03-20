@@ -1,18 +1,27 @@
-# Recruitment_Text_Mining
+> # Recruitment_Text_Mining
 채용공고 텍스트 마이닝과 생성형AI를 통한 취업 인사이트 도출 및 제공 
+<br/>
+<br/>
 
-## ✍ 요약
-- SBERT와 비지도학습을 기반으로 채용공고의 문장단위 분석을 진행하였다.
-- KeyBERT, BERTopic을 활용한 군집해석을 통해 인사이트를 도출하였다.
-- Django Framework와 생성형 AI를 통해 분석 결과의 활용성을 높혔다. 이를 통해 취업준비생에게 실질적인 도움을 줄 것으로 기대한다.
-- 서비스 시연 영상은 <a href="https://youtu.be/1sMlAB4uOCY?si=mOd8mwVrz3VC05Z9"> <img src="https://img.shields.io/badge/-video-8AC926?style=for-the-badge" height="20px" style="margin-bottom: -5px" /> </a>이곳을 통해 확인 하실 수 있습니다!
-- [Django Code](https://github.com/tgwon/Recruitment_Text_Mining_Django)
+> ## ✍ 요약
+- 원티드 채용공고 크롤링 및 문장 단위의 전처리
+- 채용공고의 전문 용어를 고려한 soynlp 형태소 분석 진행
+- SBERT 임베딩과 K-MEANS 군집분석을 통해 새로운 채용공고의 분류 기준 도출
+- KeyBERT와 BERTopic을 통해 군집을 해석하여 취업 인사이트 도출
+- 도출한 인사이트를 생성형AI를 통해 가공하여 갖춰야할 역량 제시 및 맞춤형 채용공고 추천 
+- Django 서비스 시연 영상 <a href="https://youtu.be/bNWfeFNdyOI?si=HUThnlBKSyuDsGsx"> <img src="https://img.shields.io/badge/-video-8AC926?style=for-the-badge" height="20px" style="margin-bottom: -5px" /> </a>
+<br/>
 
-##
-<img src="https://github.com/tgwon/Recruitment_Text_Mining/assets/102985590/0d82da35-9e6e-44b3-87ef-27937bcb28b8"  width="760" height="430">
+<img src="https://github.com/tgwon/Recruitment_Text_Mining/assets/102985590/fbcf7002-2b59-437c-86ef-a2b9fff41669"  width="780" height="430">
+<br/>
+<br/>
 
-##
-<img src="https://github.com/tgwon/Recruitment_Text_Mining/assets/102985590/8f9e24ab-ebdb-41da-a64c-19e4f3c8153d"  width="830" height="700">
+> ## 📊 결과
 
-## 🏆 최종결과
-- 2023년 중앙대학교 데이터 분석 공모전 최우수상
+### <최종 결과>
+- 제4회 중앙대학교 데이터 분석 공모전 **최우수상**
+
+### <구현 화면>
+<img src="https://github.com/tgwon/Recruitment_Text_Mining/assets/102985590/8f9e24ab-ebdb-41da-a64c-19e4f3c8153d"  width="740" height="600">
+
+<img src="https://github.com/tgwon/Recruitment_Text_Mining/assets/102985590/5a1bbf98-34ef-4cef-834c-3f30b4e29943"  width="580" height="300">
